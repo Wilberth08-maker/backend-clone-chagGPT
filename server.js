@@ -172,12 +172,13 @@ app.post('/api/chat', async (req, res) => {
 
         // Accede a la respuesta del modelo
         const botReply = completion.choices[0].message.content.trim();
+        const aiMessage = { role: 'assistant', content: botReply };
         if (chatId) {
             let chats = await readChats();
             const chatIndex = chats.findIndex(c => c.id === chatId);
             if (chatIndex !== -1) {
                 // Asegúrate de que los mensajes incluyen la respuesta de la IA
-                const updatedMessages = [...chatMessages, { role: 'assistant', content: botReply }];
+                const updatedMessages = [...chatMessages,aiMessage];
                 chats[chatIndex].messages = updatedMessages;
                 chats[chatIndex].updatedAt = new Date().toISOString();
                 await writeChats(chats);
