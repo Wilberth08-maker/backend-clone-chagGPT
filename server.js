@@ -150,10 +150,6 @@ app.delete('/api/chats/:id', async (req, res) => {
     }
 });
 
-// server.js
-
-// ... (todo tu código inicial hasta app.post('/api/chat', ...))
-
 app.post('/api/chat', async (req, res) => {
 
 
@@ -196,10 +192,8 @@ app.post('/api/chat', async (req, res) => {
             chats[chatIndex] = currentChat;
         }
 
-        // --- INICIO DE LA SIMULACIÓN DE RESPUESTA DE LA IA ---
+        // --- SIMULACIÓN DE RESPUESTA DE LA IA ---
         // let botReply;
-        // // Puedes agregar lógica aquí para simular diferentes respuestas.
-        // // Por ejemplo, si el mensaje del usuario incluye "error", simula un error.
         // if (frontendMessages && frontendMessages[frontendMessages.length - 1]?.content.toLowerCase().includes('error')) {
         //     botReply = "Lo siento, acabo de simular un error en la IA.";
         // } else {
@@ -222,18 +216,6 @@ app.post('/api/chat', async (req, res) => {
             console.error("Error al llamar a la API de OpenAI:", error);
             botReply = "Lo siento, hubo un error al obtener la respuesta. Por favor, inténtalo de nuevo.";
         }
-        // Comenta la línea real de la API de OpenAI
-        // const completion = await openai.chat.completions.create({
-        //     model: 'gpt-3.5-turbo',
-        //     messages: frontendMessages,
-        //     temperature: 0.7,
-        //     max_tokens: 256,
-        //     top_p: 1,
-        //     frequency_penalty: 0,
-        //     presence_penalty: 0,
-        // });
-        // const botReply = completion.choices[0].message.content.trim();
-        // --- FIN DE LA SIMULACIÓN DE RESPUESTA DE LA IA ---
 
         const aiMessage = { role: 'assistant', content: botReply };
 
@@ -242,7 +224,7 @@ app.post('/api/chat', async (req, res) => {
         chats[chatIndex] = currentChat; // Asegura que el objeto actualizado se asigne a la lista
 
         await writeChats(chats);
-        res.json({ reply: botReply, chatId: currentChat.id, isNewChat: isNewChat }); // Podrías enviar isNewChat de vuelta para el frontend
+        res.json({ reply: botReply, chatId: currentChat.id, isNewChat: isNewChat }); 
 
     } catch (error) {
         console.error('Error durante el proceso de chat (posiblemente simulación fallida o lectura/escritura de archivos):', error);
@@ -252,9 +234,6 @@ app.post('/api/chat', async (req, res) => {
             content: 'Lo siento, hubo un error interno al procesar tu solicitud (simulado).'
         };
 
-        // ... (Tu lógica existente para manejar errores y guardar el fallback,
-        //      asegurándote de que currentChat esté bien definido para evitar ReferenceError)
-
         // Si ya existe el chat, intenta añadir el error a él
         if (currentChat && currentChat.messages) {
             // currentChat.messages ya tiene el mensaje del usuario si todo el flujo superior fue bien
@@ -263,7 +242,7 @@ app.post('/api/chat', async (req, res) => {
             chats[chatIndex] = currentChat; // Asegura que el objeto actualizado se asigne a la lista
             await writeChats(chats).catch(writeError => console.error("Error al guardar chats después de un error de simulación:", writeError));
         } else {
-            // Si no existía el chat (por algún fallo anterior), créalo ahora con el error
+            // Si no existía el chat (por algún fallo anterior), se crea uno nuevo con el error
             const newChatId = `chat-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
             const firstUserMessage = frontendMessages[0]; // El primer mensaje que intentó enviar
             const fallbackChat = {
@@ -286,107 +265,6 @@ app.post('/api/chat', async (req, res) => {
         });
     }
 });
-
-// 6. Definir la ruta de la API para el chat
-// app.post('/api/chat', async (req, res) => {
-//     if (!req.body || !req.body.messages || !Array.isArray(req.body.messages) || req.body.messages.length === 0) {
-//         return res.status(400).json({ error: 'Se requiere un array de mensajes no vacío.' });
-//     }
-
-//     const { chatId, messages: frontendMessages } = req.body;
-
-//     try {
-//         let chats = await readChats();
-//         let currentChat = null;
-//         let chatIndex = -1;
-
-//         if (chatId) {
-//             chatIndex = chats.findIndex(c => c.id === chatId);
-//             if (chatIndex !== -1) {
-//                 currentChat = chats[chatIndex];
-//             }
-//         }
-
-//         if (!currentChat) {
-//             const newChatId = `chat-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
-//             const firstUserMessage = frontendMessages.find(msg => msg.role === 'user');
-//             const newChatTitle = firstUserMessage ? 
-//                 firstUserMessage.content.substring(0, 30) + (firstUserMessage.content.length > 30 ? '...' : '') : 
-//                 "Nuevo Chat";
-            
-//             currentChat = {
-//                 id: newChatId,
-//                 title: newChatTitle,
-//                 messages: [...frontendMessages], // Copia los mensajes iniciales
-//                 createdAt: new Date().toISOString(),
-//                 updatedAt: new Date().toISOString(),
-//             };
-//             chats.unshift(currentChat);
-//             chatIndex = 0;
-//         } else {
-//             currentChat.messages = [...frontendMessages]; // Actualiza con los nuevos mensajes
-//             currentChat.updatedAt = new Date().toISOString();
-//             chats[chatIndex] = currentChat;
-//         }
-
-//         const completion = await openai.chat.completions.create({
-//             model: 'gpt-3.5-turbo',
-//             messages: frontendMessages,
-//             temperature: 0.7,
-//             max_tokens: 256,
-//             top_p: 1,
-//             frequency_penalty: 0,
-//             presence_penalty: 0,
-//         });
-
-//         const botReply = completion.choices[0].message.content.trim();
-//         const aiMessage = { role: 'assistant', content: botReply };
-
-//         // Actualiza el chat con la respuesta de la IA
-//         currentChat.messages.push(aiMessage);
-//         currentChat.updatedAt = new Date().toISOString();
-//         chats[chatIndex] = currentChat;
-        
-//         await writeChats(chats);
-//         res.json({ reply: botReply, chatId: currentChat.id });
-
-//     } catch (error) {
-//         console.error('Error al comunicarse con OpenAI:', error);
-
-//         const fallbackMessage = {
-//             role: 'assistant',
-//             content: 'Lo siento, hubo un error al obtener la respuesta. Por favor, inténtalo de nuevo.'
-//         };
-
-//         const lastUserMessage = frontendMessages[frontendMessages.length - 1]; // último mensaje del usuario
-
-//         // Si ya existe el chat
-//         if (currentChat) {
-//             currentChat.messages.push(lastUserMessage); // guarda el mensaje del usuario
-//             currentChat.messages.push(fallbackMessage); // guarda la respuesta de error
-//             currentChat.updatedAt = new Date().toISOString();
-//             chats[chatIndex] = currentChat;
-//             await writeChats(chats);
-//         } else {
-//             // Si no existía el chat (por algún fallo anterior), créalo ahora
-//             const fallbackChat = {
-//                 id: `chat-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
-//                 title: lastUserMessage?.content.substring(0, 30) + (lastUserMessage?.content.length > 30 ? '...' : '') || 'Nuevo Chat',
-//                 messages: [lastUserMessage, fallbackMessage],
-//                 createdAt: new Date().toISOString(),
-//                 updatedAt: new Date().toISOString()
-//             };
-//             chats.unshift(fallbackChat);
-//             await writeChats(chats);
-//             chatIndex = 0;
-//         }
-
-//         res.status(200).json({
-//             reply: fallbackMessage.content,
-//             chatId: currentChat?.id || chats[chatIndex]?.id
-//         });
-//     }
-// });
 
 // 7. Iniciar el servidor
 app.listen(port, () => {
