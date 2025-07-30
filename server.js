@@ -150,48 +150,243 @@ app.delete('/api/chats/:id', async (req, res) => {
     }
 });
 
-// 6. Definir la ruta de la API para el chat
+// server.js
+
+// ... (todo tu código inicial hasta app.post('/api/chat', ...))
+
 app.post('/api/chat', async (req, res) => {
 
-    const { chatId, messages: chatMessages } = req.body;
 
-    if (!chatMessages || !Array.isArray(chatMessages) || chatMessages.length === 0) {
+    if (!req.body || !req.body.messages || !Array.isArray(req.body.messages) || req.body.messages.length === 0) {
         return res.status(400).json({ error: 'Se requiere un array de mensajes no vacío.' });
     }
 
-    try {
-        const completion = await openai.chat.completions.create({
-            model: 'gpt-3.5-turbo', 
-            messages: chatMessages,
-            temperature: 0.7,
-            max_tokens: 256,
-            top_p: 1,
-            frequency_penalty: 0,
-            presence_penalty: 0,
-        });
+    const { chatId, messages: frontendMessages } = req.body;
 
-        // Accede a la respuesta del modelo
-        const botReply = completion.choices[0].message.content.trim();
-        const aiMessage = { role: 'assistant', content: botReply };
+    try {
+        let chats = await readChats();
+        let currentChat = null;
+        let chatIndex = -1;
+        let isNewChat = false; // Añade esta bandera si no la tienes
+
         if (chatId) {
-            let chats = await readChats();
-            const chatIndex = chats.findIndex(c => c.id === chatId);
+            chatIndex = chats.findIndex(c => c.id === chatId);
             if (chatIndex !== -1) {
-                // Asegúrate de que los mensajes incluyen la respuesta de la IA
-                const updatedMessages = [...chatMessages,aiMessage];
-                chats[chatIndex].messages = updatedMessages;
-                chats[chatIndex].updatedAt = new Date().toISOString();
-                await writeChats(chats);
+                currentChat = chats[chatIndex];
             }
         }
-        res.json({ reply: botReply }); // Envía la respuesta al frontend
+
+        if (!currentChat) {
+            isNewChat = true; // Establece la bandera
+            const newChatId = `chat-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+            const chatTitle = frontendMessages[0]?.content?.substring(0, 30) || 'Nuevo Chat';
+
+            currentChat = {
+                id: newChatId,
+                title: chatTitle,
+                messages: [],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            chats.unshift(currentChat);
+            chatIndex = 0;
+        } else {
+            currentChat.messages = [...frontendMessages];
+            currentChat.updatedAt = new Date().toISOString();
+            chats[chatIndex] = currentChat;
+        }
+
+        // --- INICIO DE LA SIMULACIÓN DE RESPUESTA DE LA IA ---
+        // let botReply;
+        // // Puedes agregar lógica aquí para simular diferentes respuestas.
+        // // Por ejemplo, si el mensaje del usuario incluye "error", simula un error.
+        // if (frontendMessages && frontendMessages[frontendMessages.length - 1]?.content.toLowerCase().includes('error')) {
+        //     botReply = "Lo siento, acabo de simular un error en la IA.";
+        // } else {
+        //     botReply = `¡Hola! Esto es una respuesta simulada de la IA. Recibí tu mensaje: "${frontendMessages[frontendMessages.length - 1]?.content}"`;
+        // }
+
+        try {
+            const completion = await openai.chat.completions.create({
+                model: 'gpt-3.5-turbo',
+                messages: frontendMessages,
+                temperature: 0.7,
+                max_tokens: 256,
+                top_p: 1,
+                frequency_penalty: 0,
+                presence_penalty: 0,
+            });
+
+            botReply = completion.choices[0].message.content.trim();
+        } catch (error) {
+            console.error("Error al llamar a la API de OpenAI:", error);
+            botReply = "Lo siento, hubo un error al obtener la respuesta. Por favor, inténtalo de nuevo.";
+        }
+        // Comenta la línea real de la API de OpenAI
+        // const completion = await openai.chat.completions.create({
+        //     model: 'gpt-3.5-turbo',
+        //     messages: frontendMessages,
+        //     temperature: 0.7,
+        //     max_tokens: 256,
+        //     top_p: 1,
+        //     frequency_penalty: 0,
+        //     presence_penalty: 0,
+        // });
+        // const botReply = completion.choices[0].message.content.trim();
+        // --- FIN DE LA SIMULACIÓN DE RESPUESTA DE LA IA ---
+
+        const aiMessage = { role: 'assistant', content: botReply };
+
+        currentChat.messages.push(aiMessage);
+        currentChat.updatedAt = new Date().toISOString();
+        chats[chatIndex] = currentChat; // Asegura que el objeto actualizado se asigne a la lista
+
+        await writeChats(chats);
+        res.json({ reply: botReply, chatId: currentChat.id, isNewChat: isNewChat }); // Podrías enviar isNewChat de vuelta para el frontend
 
     } catch (error) {
-        console.error('Error al comunicarse con OpenAI:', error);
-        // Envía un mensaje de error genérico para no exponer detalles internos
-        res.status(500).json({ error: 'Hubo un error al procesar tu solicitud con OpenAI.' });
+        console.error('Error durante el proceso de chat (posiblemente simulación fallida o lectura/escritura de archivos):', error);
+
+        const fallbackMessage = {
+            role: 'assistant',
+            content: 'Lo siento, hubo un error interno al procesar tu solicitud (simulado).'
+        };
+
+        // ... (Tu lógica existente para manejar errores y guardar el fallback,
+        //      asegurándote de que currentChat esté bien definido para evitar ReferenceError)
+
+        // Si ya existe el chat, intenta añadir el error a él
+        if (currentChat && currentChat.messages) {
+            // currentChat.messages ya tiene el mensaje del usuario si todo el flujo superior fue bien
+            currentChat.messages.push(fallbackMessage);
+            currentChat.updatedAt = new Date().toISOString();
+            chats[chatIndex] = currentChat; // Asegura que el objeto actualizado se asigne a la lista
+            await writeChats(chats).catch(writeError => console.error("Error al guardar chats después de un error de simulación:", writeError));
+        } else {
+            // Si no existía el chat (por algún fallo anterior), créalo ahora con el error
+            const newChatId = `chat-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+            const firstUserMessage = frontendMessages[0]; // El primer mensaje que intentó enviar
+            const fallbackChat = {
+                id: newChatId,
+                title: firstUserMessage?.content.substring(0, 30) + (firstUserMessage?.content.length > 30 ? '...' : '') || 'Error Chat',
+                messages: [firstUserMessage, fallbackMessage].filter(Boolean), // Filtra mensajes nulos si firstUserMessage es undefined
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            chats.unshift(fallbackChat);
+            await writeChats(chats);
+            chatIndex = 0; // Para referencia posterior
+            currentChat = fallbackChat; // Asegura que currentChat esté definido para la respuesta
+        }
+
+
+        res.status(200).json({ // Responde 200 OK para que el frontend no falle por el estado HTTP
+            reply: fallbackMessage.content,
+            chatId: currentChat?.id || chats[chatIndex]?.id // Asegura que se envíe un chatId válido
+        });
     }
 });
+
+// 6. Definir la ruta de la API para el chat
+// app.post('/api/chat', async (req, res) => {
+//     if (!req.body || !req.body.messages || !Array.isArray(req.body.messages) || req.body.messages.length === 0) {
+//         return res.status(400).json({ error: 'Se requiere un array de mensajes no vacío.' });
+//     }
+
+//     const { chatId, messages: frontendMessages } = req.body;
+
+//     try {
+//         let chats = await readChats();
+//         let currentChat = null;
+//         let chatIndex = -1;
+
+//         if (chatId) {
+//             chatIndex = chats.findIndex(c => c.id === chatId);
+//             if (chatIndex !== -1) {
+//                 currentChat = chats[chatIndex];
+//             }
+//         }
+
+//         if (!currentChat) {
+//             const newChatId = `chat-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+//             const firstUserMessage = frontendMessages.find(msg => msg.role === 'user');
+//             const newChatTitle = firstUserMessage ? 
+//                 firstUserMessage.content.substring(0, 30) + (firstUserMessage.content.length > 30 ? '...' : '') : 
+//                 "Nuevo Chat";
+            
+//             currentChat = {
+//                 id: newChatId,
+//                 title: newChatTitle,
+//                 messages: [...frontendMessages], // Copia los mensajes iniciales
+//                 createdAt: new Date().toISOString(),
+//                 updatedAt: new Date().toISOString(),
+//             };
+//             chats.unshift(currentChat);
+//             chatIndex = 0;
+//         } else {
+//             currentChat.messages = [...frontendMessages]; // Actualiza con los nuevos mensajes
+//             currentChat.updatedAt = new Date().toISOString();
+//             chats[chatIndex] = currentChat;
+//         }
+
+//         const completion = await openai.chat.completions.create({
+//             model: 'gpt-3.5-turbo',
+//             messages: frontendMessages,
+//             temperature: 0.7,
+//             max_tokens: 256,
+//             top_p: 1,
+//             frequency_penalty: 0,
+//             presence_penalty: 0,
+//         });
+
+//         const botReply = completion.choices[0].message.content.trim();
+//         const aiMessage = { role: 'assistant', content: botReply };
+
+//         // Actualiza el chat con la respuesta de la IA
+//         currentChat.messages.push(aiMessage);
+//         currentChat.updatedAt = new Date().toISOString();
+//         chats[chatIndex] = currentChat;
+        
+//         await writeChats(chats);
+//         res.json({ reply: botReply, chatId: currentChat.id });
+
+//     } catch (error) {
+//         console.error('Error al comunicarse con OpenAI:', error);
+
+//         const fallbackMessage = {
+//             role: 'assistant',
+//             content: 'Lo siento, hubo un error al obtener la respuesta. Por favor, inténtalo de nuevo.'
+//         };
+
+//         const lastUserMessage = frontendMessages[frontendMessages.length - 1]; // último mensaje del usuario
+
+//         // Si ya existe el chat
+//         if (currentChat) {
+//             currentChat.messages.push(lastUserMessage); // guarda el mensaje del usuario
+//             currentChat.messages.push(fallbackMessage); // guarda la respuesta de error
+//             currentChat.updatedAt = new Date().toISOString();
+//             chats[chatIndex] = currentChat;
+//             await writeChats(chats);
+//         } else {
+//             // Si no existía el chat (por algún fallo anterior), créalo ahora
+//             const fallbackChat = {
+//                 id: `chat-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+//                 title: lastUserMessage?.content.substring(0, 30) + (lastUserMessage?.content.length > 30 ? '...' : '') || 'Nuevo Chat',
+//                 messages: [lastUserMessage, fallbackMessage],
+//                 createdAt: new Date().toISOString(),
+//                 updatedAt: new Date().toISOString()
+//             };
+//             chats.unshift(fallbackChat);
+//             await writeChats(chats);
+//             chatIndex = 0;
+//         }
+
+//         res.status(200).json({
+//             reply: fallbackMessage.content,
+//             chatId: currentChat?.id || chats[chatIndex]?.id
+//         });
+//     }
+// });
 
 // 7. Iniciar el servidor
 app.listen(port, () => {
