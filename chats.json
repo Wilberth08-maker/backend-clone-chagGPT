@@ -1,1 +1,98 @@
-[]
+[
+  {
+    "id": "chat-1754006337092-yw69vg",
+    "title": "Hola, prueba 1",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hola, prueba 1"
+      },
+      {
+        "role": "assistant",
+        "content": "¡Hola! La prueba funcionó bien. ¿En qué puedo ayudarte hoy?"
+      },
+      {
+        "role": "user",
+        "content": "Voy a presentar"
+      },
+      {
+        "role": "assistant",
+        "content": "¡Perfecto! Mucha suerte en tu presentación. ¿En qué puedo ayudarte para prepararte?"
+      },
+      {
+        "role": "user",
+        "content": "Prueba de loading"
+      },
+      {
+        "role": "assistant",
+        "content": "¡Entendido! La prueba de loading funciona correctamente. ¿Quieres que te ayude con algún aspecto específico de tu presentación o alguna otra prueba?"
+      },
+      {
+        "role": "user",
+        "content": "Si"
+      },
+      {
+        "role": "assistant",
+        "content": "¡Claro! Dime en qué específicamente necesitas ayuda o qué quieres preparar para tu presentación. Estoy aquí para apoyarte."
+      }
+    ],
+    "createdAt": "2025-07-31T23:58:57.092Z",
+    "updatedAt": "2025-08-01T02:07:28.162Z"
+  },
+  {
+    "id": "chat-1754006375079-fxq1jz",
+    "title": "Prueba 2, ooh",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Prueba 2, ooh"
+      },
+      {
+        "role": "assistant",
+        "content": "¡Hola! Parece que has mencionado \"Prueba 2, ooh\". ¿En qué puedo ayudarte específicamente?"
+      },
+      {
+        "role": "user",
+        "content": "Conoces brawl stars?"
+      },
+      {
+        "role": "assistant",
+        "content": "¡Sí, conozco Brawl Stars! Es un juego móvil desarrollado por Supercell, en el que los jugadores participan en batallas en equipo o en solitario con diferentes personajes llamados \"Brawlers\". Cada Brawler tiene habilidades únicas, y el objetivo varía según el modo de juego, como recolectar gemas, eliminar a los oponentes o capturar áreas. ¿Quieres saber algo específico sobre Brawl Stars?"
+      },
+      {
+        "role": "user",
+        "content": "Soy main darryl"
+      },
+      {
+        "role": "assistant",
+        "content": "¡Genial! Darryl es un Brawler muy interesante en Brawl Stars, conocido por su estilo de juego único con su metralleta de doble cañón y su súper que le permite rodar a gran velocidad, atravesando obstáculos y sorprendiendo a los rivales. Como main Darryl, seguramente tienes muy buen control de su movilidad y estrategia en combate.\n\n¿Quieres consejos, estrategias específicas, o alguna duda sobre cómo jugar mejor con Darryl?"
+      },
+      {
+        "role": "user",
+        "content": "Que es mejor main darryl o main kenji"
+      },
+      {
+        "role": "assistant",
+        "content": "¡Buena pregunta! La elección entre ser main Darryl o main Kenji depende mucho de tu estilo de juego, preferencias y del modo en el que te sientas más cómodo. Aquí te doy una comparación para ayudarte a decidir:\n\n**Main Darryl:**\n- **Estilo de juego:** Aggresivo y táctico, con mucha movilidad gracias a su súper que le permite rodar y atravesar obstáculos.\n- **Roles:** Ideal para controlar áreas, defender, y sorprender a los enemigos con su movilidad.\n- **Ventajas:** Muy bueno en modos como Modo Atraco, Modo Brawl y Enlace de Gemas, donde su movilidad puede marcar la diferencia.\n- **Dificultades:** Requiere buen timing para usar su súper efectivamente y evitar ser predecible.\n\n**Main Kenji:**\n- **Estilo de juego:** Más estratégico y preciso, se basa en ataques a distancia y en aprovechar su habilidad de ocultarse y sorprender.\n- **Roles:** Bueno en modos donde el sigilo y la precisión son clave, como en modo Asedio o en mapas con muchas esquinas.\n- **Ventajas:** Su capacidad para escapar y sorprenderlo con ataques a distancia puede ser muy útil.\n- **Dificultades"
+      }
+    ],
+    "createdAt": "2025-07-31T23:59:35.079Z",
+    "updatedAt": "2025-08-01T02:10:01.945Z"
+  },
+  {
+    "id": "chat-1754014080381-otbxkz",
+    "title": "Prueba 3",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Prueba 3"
+      },
+      {
+        "role": "assistant",
+        "content": "¡Hola! ¿En qué puedo ayudarte hoy?"
+      }
+    ],
+    "createdAt": "2025-08-01T02:08:00.381Z",
+    "updatedAt": "2025-08-01T02:08:01.039Z"
+  }
+]
