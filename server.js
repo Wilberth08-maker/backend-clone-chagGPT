@@ -152,7 +152,7 @@ app.delete('/api/chats/:id', async (req, res) => {
 
 app.post('/api/chat', async (req, res) => {
 
-
+    // Valida que 'messages' sea un array no vacío en el cuerpo de la petición.
     if (!req.body || !req.body.messages || !Array.isArray(req.body.messages) || req.body.messages.length === 0) {
         return res.status(400).json({ error: 'Se requiere un array de mensajes no vacío.' });
     }
@@ -200,6 +200,7 @@ app.post('/api/chat', async (req, res) => {
         //     botReply = `¡Hola! Esto es una respuesta simulada de la IA. Recibí tu mensaje: "${frontendMessages[frontendMessages.length - 1]?.content}"`;
         // }
 
+        //  Maneja la lógica principal del chat
         try {
             const completion = await openai.chat.completions.create({
                 model: 'gpt-4.1-nano-2025-04-14',
