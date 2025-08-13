@@ -1,10 +1,12 @@
 // 1. Cargar las variables de entorno desde .env
 require('dotenv').config();
 
+
 // 2. Importar módulos necesarios
 const express = require('express');
 const cors = require('cors');
-const OpenAI = require('openai');
+// const OpenAI = require('openai');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -13,9 +15,11 @@ const app = express();
 const port = process.env.PORT || 5000; 
 
 // 4. Configurar el cliente de OpenAI con tu API Key
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+// const OPENAI = new OpenAI({
+//     apiKey: process.env.GOOGLE_API_KEY,
+// });
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY); // <-- CAMBIO AQUÍ
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // <-- CAMBIO AQUÍ
 
 // Ruta del archivo donde se guardarán los chats
 const CHATS_FILE_PATH = path.join(__dirname, 'chats.json');
@@ -201,18 +205,30 @@ app.post('/api/chat', async (req, res) => {
         // }
 
         //  Maneja la lógica principal del chat
+        let botReply;
         try {
-            const completion = await openai.chat.completions.create({
-                model: 'gpt-4.1-nano-2025-04-14',
-                messages: frontendMessages,
-                temperature: 0.7,
-                max_tokens: 256,
-                top_p: 1,
-                frequency_penalty: 0,
-                presence_penalty: 0,
-            });
+            // OPENAI
+            // const completion = await openai.chat.completions.create({
+            //     model: 'model: 'gpt-4.1-nano-2025-04-14',
+            //     messages: frontendMessages,
+            //     temperature: 0.7,
+            //     max_tokens: 256,
+            //     top_p: 1,
+            //     frequency_penalty: 0,
+            //     presence_penalty: 0,
+            // });
 
-            botReply = completion.choices[0].message.content.trim();
+            // botReply = completion.choices[0].message.content.trim();
+            const chat = model.startChat({
+                history: frontendMessages.slice(0, -1).map(msg => ({ role: msg.role === 'user' ? 'user' : 'model', parts: [{ text: msg.content }] })),
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 256,
+                },
+            })
+            const lastUserMessage = frontendMessages[frontendMessages.length - 1];
+            const result = await chat.sendMessage(lastUserMessage.content);
+            botReply = result.response.text();
         } catch (error) {
             console.error("Error al llamar a la API de OpenAI:", error);
             botReply = "Lo siento, hubo un error al obtener la respuesta. Por favor, inténtalo de nuevo.";
