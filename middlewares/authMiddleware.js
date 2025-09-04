@@ -11,6 +11,7 @@ function authenticateToken(req, res, next) {
     if (err)
       return res.status(403).json({ error: "Token inválido o expirado" });
     req.userId = user.id;
+    req.email = user.email;
     next();
   });
 }
