@@ -1,0 +1,112 @@
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjE3NTY4NTEzMjU1NDYiLCJpYXQiOjE3NTY4NTE0NTIsImV4cCI6MTc1Njg1NTA1Mn0.cYN1NorM9TPJ1VoTSg6BUGWLM8lnlBVMd_nswt6CcVI
+
+### 🧠 Registro de usuario (signup)
+POST http://localhost:5000/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "jorge@example.com",
+  "password": "123456"
+}
+
+### 🔐 Login de usuario
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "jorge@example.com",
+  "password": "123456"
+}
+
+### ❌ Login con contraseña incorrecta
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "jorge",
+  "password": "wrongpass"
+}
+
+### ❌ Registro de usuario duplicado
+POST http://localhost:5000/api/auth/signup
+Content-Type: application/json
+
+{
+  "username": "jorge",
+  "password": "otro123"
+}
+
+### ✅ Crear nuevo chat
+POST http://localhost:5000/api/chats
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Chat de prueba"
+}
+
+### ✅ Obtener todos los chats del usuario
+GET http://localhost:5000/api/chats
+Authorization: Bearer {{token}}
+
+### ✅ Obtener chat por ID
+GET http://localhost:5000/api/chats/chat-1693670000000-abc123
+Authorization: Bearer {{token}}
+
+### ❌ Obtener chat ajeno (simulado)
+GET http://localhost:5000/api/chats/chat-de-otro-usuario
+Authorization: Bearer {{token}}
+
+### ✅ Actualizar mensajes de un chat
+PUT http://localhost:5000/api/chats/id": chat-1756851558157-lyrymg
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "messages": [
+    { "role": "user", "content": "Hola, ¿cómo estás?" },
+    { "role": "assistant", "content": "¡Estoy bien, gracias!" }
+  ]
+}
+
+### ❌ Actualizar chat ajeno
+PUT http://localhost:5000/api/chats/chat-de-otro-usuario
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "messages": [
+    { "role": "user", "content": "Esto no debería funcionar" }
+  ]
+}
+
+### ✅ Eliminar chat
+DELETE http://localhost:5000/api/chats/chat-1756851742843-736jso
+Authorization: Bearer {{token}}
+
+### ❌ Eliminar chat ajeno
+DELETE http://localhost:5000/api/chats/chat-de-otro-usuario
+Authorization: Bearer {{token}}
+
+### ✅ Enviar mensaje a la IA
+POST http://localhost:5000/api/chat
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "chatId": "chat-1693670000000-abc123",
+  "messages": [
+    { "role": "user", "content": "¿Cuál es la capital de Japón?" }
+  ]
+}
+
+### ❌ Enviar mensaje sin token
+POST http://localhost:5000/api/chat
+Content-Type: application/json
+
+{
+  "chatId": "chat-1693670000000-abc123",
+  "messages": [
+    { "role": "user", "content": "¿Esto debería fallar?" }
+  ]
+}
