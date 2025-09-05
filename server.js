@@ -297,7 +297,7 @@ app.post("/api/chat", optionalAuth, async (req, res) => {
         })),
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 256,
+          maxOutputTokens: 768,
         },
       });
       const lastUserMessage = frontendMessages[frontendMessages.length - 1];
