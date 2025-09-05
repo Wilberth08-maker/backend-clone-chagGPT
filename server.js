@@ -20,6 +20,7 @@ app.use(express.json()); // Permite que el servidor entienda el JSON que le env�
 // Importar rutas y middlewares personalizados
 const authRoutes = require("./routes/authRoutes");
 const authenticateToken = require("./middlewares/authMiddleware");
+const optionalAuth = require("./middlewares/authOpcionalMiddleware");
 
 app.use("/api/auth", authRoutes); // Rutas de autenticación
 
@@ -74,9 +75,6 @@ app.get("/api/chats", authenticateToken, async (req, res) => {
 
 // POST
 app.post("/api/chats", authenticateToken, async (req, res) => {
-  console.log("Token recibido:", req.headers.authorization);
-  console.log("Usuario autenticado:", req.userId);
-
   if (!req.userId) {
     return res.status(401).json({ error: "Usuario no autenticado" });
   }
@@ -179,7 +177,7 @@ app.delete("/api/chats/:id", authenticateToken, async (req, res) => {
   }
 });
 
-app.post("/api/chat", authenticateToken, async (req, res) => {
+app.post("/api/chat", optionalAuth, async (req, res) => {
   // Valida que 'messages' sea un array no vacío en el cuerpo de la petición.
   if (
     !req.body ||
@@ -200,7 +198,7 @@ app.post("/api/chat", authenticateToken, async (req, res) => {
     let chatIndex = -1;
     let isNewChat = false; // Añade esta bandera si no la tienes
 
-    if (chatId) {
+    if (req.userId && chatId) {
       chatIndex = chats.findIndex((c) => c.id === chatId);
       if (chatIndex !== -1) {
         currentChat = chats[chatIndex];
@@ -210,6 +208,39 @@ app.post("/api/chat", authenticateToken, async (req, res) => {
             .json({ error: "No tienes permiso para modificar este chat." });
         }
       }
+    }
+
+    //  Si no hay usuario autenticado
+    if (!req.userId) {
+      // Simulación de IA
+      const chat = model.startChat({
+        history: frontendMessages.slice(0, -1).map((msg) => ({
+          role: msg.role === "user" ? "user" : "model",
+          parts: [{ text: msg.content }],
+        })),
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 256,
+        },
+      });
+
+      const lastUserMessage = frontendMessages[frontendMessages.length - 1];
+      let botReply;
+
+      try {
+        const result = await chat.sendMessage(lastUserMessage.content);
+        botReply = result.response.text();
+      } catch (error) {
+        console.error("Error al llamar a la API de OpenAI:", error);
+        botReply = "Lo siento, hubo un error al obtener la respuesta.";
+      }
+
+      // 🔥 Devuelves respuesta sin persistir nada
+      return res.json({
+        reply: botReply,
+        chatId: null, // No hay chatId para invitados
+        isNewChat: true,
+      });
     }
 
     if (!currentChat) {
@@ -226,7 +257,7 @@ app.post("/api/chat", authenticateToken, async (req, res) => {
         messages: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        userId: req.userId,
+        userId: req.userId || null,
       };
       chats.unshift(currentChat);
       chatIndex = 0;
@@ -325,7 +356,7 @@ app.post("/api/chat", authenticateToken, async (req, res) => {
         messages: [firstUserMessage, fallbackMessage].filter(Boolean), // Filtra mensajes nulos si firstUserMessage es undefined
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        userId: req.userId,
+        userId: req.userId || null,
       };
       chats.unshift(fallbackChat);
       await writeChats(chats);
