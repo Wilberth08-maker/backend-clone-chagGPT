@@ -1,16 +1,20 @@
 // 1. Cargar las variables de entorno desde .env
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
 
 // 2. Importar módulos necesarios
-const express = require("express");
-const cors = require("cors");
+import express from "express";
+import cors from "cors";
 // const OpenAI = require('openai');
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-const fs = require("fs").promises;
-const path = require("path");
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import fs from "fs/promises";
+import path from "path";
+import { PrismaClient } from "@prisma/client";
+import colors from "colors";
 
 // 3. Inicializar Express y configurar el puerto
 const app = express();
+const prisma = new PrismaClient();
 const port = process.env.PORT || 5000;
 
 // Middleware (configuraciones para tu servidor)
@@ -18,9 +22,9 @@ app.use(cors()); // Permite peticiones de orígenes diferentes (tu frontend Reac
 app.use(express.json()); // Permite que el servidor entienda el JSON que le envías
 
 // Importar rutas y middlewares personalizados
-const authRoutes = require("./routes/authRoutes");
-const authenticateToken = require("./middlewares/authMiddleware");
-const optionalAuth = require("./middlewares/authOpcionalMiddleware");
+import authRoutes from "./routes/authRoutes.js";
+import authenticateToken from "./middlewares/authMiddleware.js";
+import optionalAuth from "./middlewares/authOpcionalMiddleware.js";
 
 app.use("/api/auth", authRoutes); // Rutas de autenticación
 
@@ -374,5 +378,7 @@ app.post("/api/chat", optionalAuth, async (req, res) => {
 
 // 7. Iniciar el servidor
 app.listen(port, () => {
-  console.log(`Servidor backend escuchando en http://localhost:${port}`);
+  console.log(
+    `Servidor backend escuchando en http://localhost:${port}`.rainbow
+  );
 });
