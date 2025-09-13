@@ -4,7 +4,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon server.js",
-    "migrations": "yarn prisma migrate reset --force && yarn prisma migrate dev && yarn prisma generate && yarn run seed",
+    "migrations": "npm run prisma:migrate:reset && npm run prisma:migrate:dev && npm run prisma:generate && npm run seed",
+    "prisma:migrate:reset": "prisma migrate reset --force",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:generate": "prisma generate",
     "seed": "node prisma/seed.js"
   },
   "keywords": [],
