@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon server.js",
+    "migrations": "yarn prisma migrate reset --force && yarn prisma migrate dev && yarn prisma generate && yarn run seed",
+    "seed": "node prisma/seed.js"
   },
   "keywords": [],
   "author": "",
