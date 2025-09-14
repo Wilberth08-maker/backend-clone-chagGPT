@@ -5,7 +5,7 @@ const {
   findUserByEmail,
   createUser,
   findUserById,
-} = require("../lib/userService");
+} = require("../services/userService");
 
 const SECRET_KEY = process.env.JWT_SECRET || "clave_super_secreta";
 

@@ -10,13 +10,13 @@ const fs = require("fs").promises;
 const path = require("path");
 // const { PrismaClient } = require("@prisma/client");
 const colors = require("colors");
-const getChatsByUser = require("./lib/chatService").getChatsByUser;
-const getChatById = require("./lib/chatService").getChatById;
-const createChat = require("./lib/chatService").createChat;
-const updateChat = require("./lib/chatService").updateChat;
-const deleteChat = require("./lib/chatService").deleteChat;
+const getChatsByUser = require("./services/chatService").getChatsByUser;
+const getChatById = require("./services/chatService").getChatById;
+const createChat = require("./services/chatService").createChat;
+const updateChat = require("./services/chatService").updateChat;
+const deleteChat = require("./services/chatService").deleteChat;
 const createChatWithMessages =
-  require("./lib/chatService").createChatWithMessages;
+  require("./services/chatService").createChatWithMessages;
 const { runSeed } = require("./prisma/seed");
 
 // 3. Inicializar Express y configurar el puerto
