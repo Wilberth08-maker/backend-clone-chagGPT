@@ -1,37 +1,53 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { z } = require("zod");
+const {
+  findUserByEmail,
+  createUser,
+  findUserById,
+} = require("../lib/userService");
 
-const users = []; // 🧠 En memoria
 const SECRET_KEY = process.env.JWT_SECRET || "clave_super_secreta";
 
-exports.signup = async (req, res) => {
-  const { email, password } = req.body;
+const authSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+});
 
-  if (!email || !password)
-    return res.status(400).json({ error: "Correo y contraseña requeridos" });
+async function signup(req, res) {
+  const result = authSchema.safeParse(req.body);
+  if (!result.success) {
+    return res
+      .status(400)
+      .json({ error: "Datos inválidos", issues: result.error.issues });
+  }
 
-  const existingUser = users.find((u) => u.email === email);
+  const { email, password } = result.data;
+
+  const existingUser = await findUserByEmail(email);
   if (existingUser)
     return res.status(409).json({ error: "El correo ya está registrado" });
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  const newUser = {
-    id: Date.now().toString(),
-    email,
-    password: hashedPassword,
-  };
-  users.push(newUser);
+  const newUser = await createUser({ email, hashedPassword });
 
   const token = jwt.sign({ id: newUser.id, email: newUser.email }, SECRET_KEY, {
     expiresIn: "1h",
   });
   res.status(201).json({ token });
-};
+}
 
-exports.login = async (req, res) => {
-  const { email, password } = req.body;
+async function login(req, res) {
+  const result = authSchema.safeParse(req.body);
+  if (!result.success) {
+    return res
+      .status(400)
+      .json({ error: "Datos inválidos", issues: result.error.issues });
+  }
 
-  const user = users.find((u) => u.email === email);
+  const { email, password } = result.data;
+
+  const user = await findUserByEmail(email);
   if (!user) return res.status(401).json({ error: "Credenciales inválidas" });
 
   const isMatch = await bcrypt.compare(password, user.password);
@@ -42,11 +58,16 @@ exports.login = async (req, res) => {
     expiresIn: "1h",
   });
   res.status(200).json({ token });
-};
+}
 
-exports.getMe = (req, res) => {
-  res.json({
-    id: req.userId,
-    email: req.email,
-  });
+async function getMe(req, res) {
+  const user = await findUserById(req.userId);
+  if (!user) return res.status(404).json({ error: "Usuario no encontrado" });
+  res.json(user);
+}
+
+module.exports = {
+  signup,
+  login,
+  getMe,
 };
