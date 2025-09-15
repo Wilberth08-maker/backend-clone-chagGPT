@@ -276,8 +276,6 @@ app.post("/seed", async (req, res) => {
 });
 
 // 7. Iniciar el servidor
-app.listen(port, () => {
-  console.log(
-    `Servidor backend escuchando en http://localhost:${port}`.rainbow
-  );
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Servidor backend escuchando en el puerto ${port}`.rainbow);
 });
